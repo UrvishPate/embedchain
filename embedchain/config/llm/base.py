@@ -1,74 +1,24 @@
 import re
 from string import Template
 from typing import Any, Dict, Optional
-
 from embedchain.config.base_config import BaseConfig
 from embedchain.helper.json_serializable import register_deserializable
-
-DEFAULT_PROMPT = """
-  Use the following pieces of context to answer the query at the end.
-  If you don't know the answer, just say that you don't know, don't try to make up an answer.
-
-  $context
-
-  Query: $query
-
-  Helpful Answer:
-"""  # noqa:E501
-
-DEFAULT_PROMPT_WITH_HISTORY = """
-  Use the following pieces of context to answer the query at the end.
-  If you don't know the answer, just say that you don't know, don't try to make up an answer.
-  I will provide you with our conversation history.
-
-  $context
-
-  History: $history
-
-  Query: $query
-
-  Helpful Answer:
-"""  # noqa:E501
-
-DOCS_SITE_DEFAULT_PROMPT = """
-  Use the following pieces of context to answer the query at the end.
-  If you don't know the answer, just say that you don't know, don't try to make up an answer. Wherever possible, give complete code snippet. Dont make up any code snippet on your own.
-
-  $context
-
-  Query: $query
-
-  Helpful Answer:
-"""  # noqa:E501
-
+DEFAULT_PROMPT = "\n  Use the following pieces of context to answer the query at the end.\n  If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n  $context\n\n  Query: $query\n\n  Helpful Answer:\n"
+DEFAULT_PROMPT_WITH_HISTORY = "\n  Use the following pieces of context to answer the query at the end.\n  If you don't know the answer, just say that you don't know, don't try to make up an answer.\n  I will provide you with our conversation history.\n\n  $context\n\n  History: $history\n\n  Query: $query\n\n  Helpful Answer:\n"
+DOCS_SITE_DEFAULT_PROMPT = "\n  Use the following pieces of context to answer the query at the end.\n  If you don't know the answer, just say that you don't know, don't try to make up an answer. Wherever possible, give complete code snippet. Dont make up any code snippet on your own.\n\n  $context\n\n  Query: $query\n\n  Helpful Answer:\n"
 DEFAULT_PROMPT_TEMPLATE = Template(DEFAULT_PROMPT)
 DEFAULT_PROMPT_WITH_HISTORY_TEMPLATE = Template(DEFAULT_PROMPT_WITH_HISTORY)
 DOCS_SITE_PROMPT_TEMPLATE = Template(DOCS_SITE_DEFAULT_PROMPT)
-query_re = re.compile(r"\$\{*query\}*")
-context_re = re.compile(r"\$\{*context\}*")
-history_re = re.compile(r"\$\{*history\}*")
-
-
+query_re = re.compile('\\$\\{*query\\}*')
+context_re = re.compile('\\$\\{*context\\}*')
+history_re = re.compile('\\$\\{*history\\}*')
 @register_deserializable
 class BaseLlmConfig(BaseConfig):
     """
     Config for the `query` method.
     """
 
-    def __init__(
-        self,
-        number_documents: int = 1,
-        template: Optional[Template] = None,
-        model: Optional[str] = None,
-        temperature: float = 0,
-        max_tokens: int = 1000,
-        top_p: float = 1,
-        stream: bool = False,
-        deployment_name: Optional[str] = None,
-        system_prompt: Optional[str] = None,
-        where: Dict[str, Any] = None,
-        query_type: Optional[str] = None,
-    ):
+    def __init__(self, number_documents: int=1, template: Optional[Template]=None, model: Optional[str]=None, temperature: float=0, max_tokens: int=1000, top_p: float=1, stream: bool=False, deployment_name: Optional[str]=None, system_prompt: Optional[str]=None, where: Dict[str, Any]=None, query_type: Optional[str]=None):
         """
         Initializes a configuration class instance for the LLM.
 
@@ -104,7 +54,6 @@ class BaseLlmConfig(BaseConfig):
         """
         if template is None:
             template = DEFAULT_PROMPT_TEMPLATE
-
         self.number_documents = number_documents
         self.temperature = temperature
         self.max_tokens = max_tokens
@@ -113,17 +62,14 @@ class BaseLlmConfig(BaseConfig):
         self.deployment_name = deployment_name
         self.system_prompt = system_prompt
         self.query_type = query_type
-
         if type(template) is str:
             template = Template(template)
-
         if self.validate_template(template):
             self.template = template
         else:
-            raise ValueError("`template` should have `query` and `context` keys and potentially `history` (if used).")
-
+            raise ValueError('`template` should have `query` and `context` keys and potentially `history` (if used).')
         if not isinstance(stream, bool):
-            raise ValueError("`stream` should be bool")
+            raise ValueError('`stream` should be bool')
         self.stream = stream
         self.where = where
 
