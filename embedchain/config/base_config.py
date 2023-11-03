@@ -1,8 +1,5 @@
 from typing import Any, Dict
-
 from embedchain.helper.json_serializable import JSONSerializable
-
-
 class BaseConfig(JSONSerializable):
     """
     Base config.
@@ -18,4 +15,4 @@ class BaseConfig(JSONSerializable):
         :return: config object as dict
         :rtype: Dict[str, Any]
         """
-        return vars(self)
+        return dict(vars(self))
