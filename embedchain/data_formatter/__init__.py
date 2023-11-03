@@ -1,1 +1,1 @@
-from .data_formatter import DataFormatter  # noqa: F401
+from .data_formatter import DataFormatter
