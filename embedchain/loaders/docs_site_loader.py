@@ -1,43 +1,31 @@
 import hashlib
 import logging
 from urllib.parse import urljoin, urlparse
-
 import requests
-
 try:
     from bs4 import BeautifulSoup
 except ImportError:
-    raise ImportError(
-        'DocsSite requires extra dependencies. Install with `pip install --upgrade "embedchain[dataloaders]"`'
-    ) from None
-
-
+    raise ImportError('DocsSite requires extra dependencies. Install with `pip install --upgrade "embedchain[dataloaders]"`') from None
 from embedchain.helper.json_serializable import register_deserializable
 from embedchain.loaders.base_loader import BaseLoader
-
-
 @register_deserializable
 class DocsSiteLoader(BaseLoader):
+
     def __init__(self):
         self.visited_links = set()
 
     def _get_child_links_recursive(self, url):
         parsed_url = urlparse(url)
-        base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+        base_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
         current_path = parsed_url.path
-
         response = requests.get(url)
         if response.status_code != 200:
-            logging.info(f"Failed to fetch the website: {response.status_code}")
+            logging.info(f'Failed to fetch the website: {response.status_code}')
             return
-
-        soup = BeautifulSoup(response.text, "html.parser")
-        all_links = [link.get("href") for link in soup.find_all("a")]
-
-        child_links = [link for link in all_links if link and link.startswith(current_path) and link != current_path]
-
+        soup = BeautifulSoup(response.text, 'html.parser')
+        all_links = [link.get('href') for link in soup.find_all('a')]
+        child_links = [link for link in all_links if link and link.startswith(current_path) and (link != current_path)]
         absolute_paths = [urljoin(base_url, link) for link in child_links]
-
         for link in absolute_paths:
             if link not in self.visited_links:
                 self.visited_links.add(link)
@@ -52,21 +40,10 @@ class DocsSiteLoader(BaseLoader):
     def _load_data_from_url(self, url):
         response = requests.get(url)
         if response.status_code != 200:
-            logging.info(f"Failed to fetch the website: {response.status_code}")
+            logging.info(f'Failed to fetch the website: {response.status_code}')
             return []
-
-        soup = BeautifulSoup(response.content, "html.parser")
-        selectors = [
-            "article.bd-article",
-            'article[role="main"]',
-            "div.md-content",
-            'div[role="main"]',
-            "div.container",
-            "div.section",
-            "article",
-            "main",
-        ]
-
+        soup = BeautifulSoup(response.content, 'html.parser')
+        selectors = ['article.bd-article', 'article[role="main"]', 'div.md-content', 'div[role="main"]', 'div.container', 'div.section', 'article', 'main']
         output = []
         for selector in selectors:
             element = soup.select_one(selector)
@@ -75,31 +52,12 @@ class DocsSiteLoader(BaseLoader):
                 break
         else:
             content = soup.get_text()
-
-        soup = BeautifulSoup(content, "html.parser")
-        ignored_tags = [
-            "nav",
-            "aside",
-            "form",
-            "header",
-            "noscript",
-            "svg",
-            "canvas",
-            "footer",
-            "script",
-            "style",
-        ]
+        soup = BeautifulSoup(content, 'html.parser')
+        ignored_tags = ['nav', 'aside', 'form', 'header', 'noscript', 'svg', 'canvas', 'footer', 'script', 'style']
         for tag in soup(ignored_tags):
             tag.decompose()
-
-        content = " ".join(soup.stripped_strings)
-        output.append(
-            {
-                "content": content,
-                "meta_data": {"url": url},
-            }
-        )
-
+        content = ' '.join(soup.stripped_strings)
+        output.append({'content': content, 'meta_data': {'url': url}})
         return output
 
     def load_data(self, url):
@@ -107,8 +65,5 @@ class DocsSiteLoader(BaseLoader):
         output = []
         for u in all_urls:
             output.extend(self._load_data_from_url(u))
-        doc_id = hashlib.sha256((" ".join(all_urls) + url).encode()).hexdigest()
-        return {
-            "doc_id": doc_id,
-            "data": output,
-        }
+        doc_id = hashlib.sha256((' '.join(all_urls) + url).encode()).hexdigest()
+        return {'doc_id': doc_id, 'data': output}
