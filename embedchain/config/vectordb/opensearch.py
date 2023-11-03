@@ -1,20 +1,10 @@
 from typing import Dict, Optional, Tuple
-
 from embedchain.config.vectordb.base import BaseVectorDbConfig
 from embedchain.helper.json_serializable import register_deserializable
-
-
 @register_deserializable
 class OpenSearchDBConfig(BaseVectorDbConfig):
-    def __init__(
-        self,
-        opensearch_url: str,
-        http_auth: Tuple[str, str],
-        vector_dimension: int = 1536,
-        collection_name: Optional[str] = None,
-        dir: Optional[str] = None,
-        **extra_params: Dict[str, any],
-    ):
+
+    def __init__(self, opensearch_url: str, http_auth: Tuple[str, str], vector_dimension: int=1536, collection_name: Optional[str]=None, dir: Optional[str]=None, **extra_params: Dict[str, any]):
         """
         Initializes a configuration class instance for an OpenSearch client.
 
@@ -33,5 +23,4 @@ class OpenSearchDBConfig(BaseVectorDbConfig):
         self.http_auth = http_auth
         self.vector_dimension = vector_dimension
         self.extra_params = extra_params
-
         super().__init__(collection_name=collection_name, dir=dir)
