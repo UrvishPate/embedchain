@@ -1,11 +1,9 @@
 import unittest
 from string import Template
-
 from embedchain import App
 from embedchain.config import AppConfig, BaseLlmConfig
-
-
 class TestGeneratePrompt(unittest.TestCase):
+
     def setUp(self):
         self.app = App(config=AppConfig(collect_metrics=False))
 
@@ -19,20 +17,13 @@ class TestGeneratePrompt(unittest.TestCase):
         returned prompt correctly incorporates all the contexts and the query into
         the format specified by the template.
         """
-        # Setup
-        input_query = "Test query"
-        contexts = ["Context 1", "Context 2", "Context 3"]
-        template = "You are a bot. Context: ${context} - Query: ${query} - Helpful answer:"
+        input_query = 'Test query'
+        contexts = ['Context 1', 'Context 2', 'Context 3']
+        template = 'You are a bot. Context: ${context} - Query: ${query} - Helpful answer:'
         config = BaseLlmConfig(template=Template(template))
         self.app.llm.config = config
-
-        # Execute
         result = self.app.llm.generate_prompt(input_query, contexts)
-
-        # Assert
-        expected_result = (
-            "You are a bot. Context: Context 1 | Context 2 | Context 3 - Query: Test query - Helpful answer:"
-        )
+        expected_result = 'You are a bot. Context: Context 1 | Context 2 | Context 3 - Query: Test query - Helpful answer:'
         self.assertEqual(result, expected_result)
 
     def test_generate_prompt_with_contexts_list(self):
@@ -43,17 +34,12 @@ class TestGeneratePrompt(unittest.TestCase):
         and then calls generate_prompt. It checks that the returned prompt
         correctly includes all the contexts and the query.
         """
-        # Setup
-        input_query = "Test query"
-        contexts = ["Context 1", "Context 2", "Context 3"]
+        input_query = 'Test query'
+        contexts = ['Context 1', 'Context 2', 'Context 3']
         config = BaseLlmConfig()
-
-        # Execute
         self.app.llm.config = config
         result = self.app.llm.generate_prompt(input_query, contexts)
-
-        # Assert
-        expected_result = config.template.substitute(context="Context 1 | Context 2 | Context 3", query=input_query)
+        expected_result = config.template.substitute(context='Context 1 | Context 2 | Context 3', query=input_query)
         self.assertEqual(result, expected_result)
 
     def test_generate_prompt_with_history(self):
@@ -61,10 +47,9 @@ class TestGeneratePrompt(unittest.TestCase):
         Test the 'generate_prompt' method with BaseLlmConfig containing a history attribute.
         """
         config = BaseLlmConfig()
-        config.template = Template("Context: $context | Query: $query | History: $history")
+        config.template = Template('Context: $context | Query: $query | History: $history')
         self.app.llm.config = config
-        self.app.llm.set_history(["Past context 1", "Past context 2"])
-        prompt = self.app.llm.generate_prompt("Test query", ["Test context"])
-
-        expected_prompt = "Context: Test context | Query: Test query | History: ['Past context 1', 'Past context 2']"
+        self.app.llm.set_history(['Past context 1', 'Past context 2'])
+        prompt = self.app.llm.generate_prompt('Test query', ['Test context'])
+        expected_prompt = 'Context: Test context | Query: Test query | History: Past context 1 | Past context 2'
         self.assertEqual(prompt, expected_prompt)

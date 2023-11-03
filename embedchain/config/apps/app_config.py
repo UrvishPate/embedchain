@@ -1,23 +1,13 @@
 from typing import Optional
-
 from embedchain.helper.json_serializable import register_deserializable
-
 from .base_app_config import BaseAppConfig
-
-
 @register_deserializable
 class AppConfig(BaseAppConfig):
     """
     Config to initialize an embedchain custom `App` instance, with extra config options.
     """
 
-    def __init__(
-        self,
-        log_level: str = "WARNING",
-        id: Optional[str] = None,
-        collect_metrics: Optional[bool] = True,
-        collection_name: Optional[str] = None,
-    ):
+    def __init__(self, log_level: str='WARNING', id: Optional[str]=None, collect_metrics: Optional[bool]=True, collection_name: Optional[str]=None):
         """
         Initializes a configuration class instance for an App. This is the simplest form of an embedchain app.
         Most of the configuration is done in the `App` class itself.

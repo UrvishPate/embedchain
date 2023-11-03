@@ -1,8 +1,6 @@
 from embedchain.config.vectordb.base import BaseVectorDbConfig
 from embedchain.embedder.base import BaseEmbedder
 from embedchain.helper.json_serializable import JSONSerializable
-
-
 class BaseVectorDB(JSONSerializable):
     """Base class for vector database."""
 
@@ -12,8 +10,8 @@ class BaseVectorDB(JSONSerializable):
         :param config: Database configuration class instance.
         :type config: BaseVectorDbConfig
         """
-        self.client = self._get_or_create_db()
         self.config: BaseVectorDbConfig = config
+        self.client = self._get_or_create_db()
 
     def _initialize(self):
         """

@@ -1,7 +1,5 @@
 from typing import Optional
-
 import yaml
-
 from embedchain.config import AppConfig, BaseEmbedderConfig, BaseLlmConfig
 from embedchain.config.vectordb.base import BaseVectorDbConfig
 from embedchain.embedchain import EmbedChain
@@ -13,8 +11,6 @@ from embedchain.llm.base import BaseLlm
 from embedchain.llm.openai import OpenAILlm
 from embedchain.vectordb.base import BaseVectorDB
 from embedchain.vectordb.chroma import ChromaDB
-
-
 @register_deserializable
 class App(EmbedChain):
     """
@@ -27,17 +23,7 @@ class App(EmbedChain):
     chat(query): finds answer to the given query using vector database and LLM, with conversation history.
     """
 
-    def __init__(
-        self,
-        config: Optional[AppConfig] = None,
-        llm: BaseLlm = None,
-        llm_config: Optional[BaseLlmConfig] = None,
-        db: BaseVectorDB = None,
-        db_config: Optional[BaseVectorDbConfig] = None,
-        embedder: BaseEmbedder = None,
-        embedder_config: Optional[BaseEmbedderConfig] = None,
-        system_prompt: Optional[str] = None,
-    ):
+    def __init__(self, config: Optional[AppConfig]=None, llm: Optional[BaseLlm]=None, llm_config: Optional[BaseLlmConfig]=None, db: Optional[BaseVectorDB]=None, db_config: Optional[BaseVectorDbConfig]=None, embedder: Optional[BaseEmbedder]=None, embedder_config: Optional[BaseEmbedderConfig]=None, system_prompt: Optional[str]=None):
         """
         Initialize a new `App` instance.
 
@@ -64,54 +50,28 @@ class App(EmbedChain):
         :type system_prompt: Optional[str], optional
         :raises TypeError: LLM, database or embedder or their config is not a valid class instance.
         """
-        # Type check configs
-        if config and not isinstance(config, AppConfig):
-            raise TypeError(
-                "Config is not a `AppConfig` instance. "
-                "Please make sure the type is right and that you are passing an instance."
-            )
-        if llm_config and not isinstance(llm_config, BaseLlmConfig):
-            raise TypeError(
-                "`llm_config` is not a `BaseLlmConfig` instance. "
-                "Please make sure the type is right and that you are passing an instance."
-            )
-        if db_config and not isinstance(db_config, BaseVectorDbConfig):
-            raise TypeError(
-                "`db_config` is not a `BaseVectorDbConfig` instance. "
-                "Please make sure the type is right and that you are passing an instance."
-            )
-        if embedder_config and not isinstance(embedder_config, BaseEmbedderConfig):
-            raise TypeError(
-                "`embedder_config` is not a `BaseEmbedderConfig` instance. "
-                "Please make sure the type is right and that you are passing an instance."
-            )
-
-        # Assign defaults
+        if config and (not isinstance(config, AppConfig)):
+            raise TypeError('Config is not a `AppConfig` instance. Please make sure the type is right and that you are passing an instance.')
+        if llm_config and (not isinstance(llm_config, BaseLlmConfig)):
+            raise TypeError('`llm_config` is not a `BaseLlmConfig` instance. Please make sure the type is right and that you are passing an instance.')
+        if db_config and (not isinstance(db_config, BaseVectorDbConfig)):
+            raise TypeError('`db_config` is not a `BaseVectorDbConfig` instance. Please make sure the type is right and that you are passing an instance.')
+        if embedder_config and (not isinstance(embedder_config, BaseEmbedderConfig)):
+            raise TypeError('`embedder_config` is not a `BaseEmbedderConfig` instance. Please make sure the type is right and that you are passing an instance.')
         if config is None:
             config = AppConfig()
-        if llm is None:
+        if llm is None and llm_config:
             llm = OpenAILlm(config=llm_config)
-        if db is None:
+        if db is None and db_config:
             db = ChromaDB(config=db_config)
-        if embedder is None:
+        if embedder is None and embedder_config:
             embedder = OpenAIEmbedder(config=embedder_config)
-
-        # Type check assignments
         if not isinstance(llm, BaseLlm):
-            raise TypeError(
-                "LLM is not a `BaseLlm` instance. "
-                "Please make sure the type is right and that you are passing an instance."
-            )
+            raise TypeError('LLM is not a `BaseLlm` instance. Please make sure the type is right and that you are passing an instance.')
         if not isinstance(db, BaseVectorDB):
-            raise TypeError(
-                "Database is not a `BaseVectorDB` instance. "
-                "Please make sure the type is right and that you are passing an instance."
-            )
+            raise TypeError('Database is not a `BaseVectorDB` instance. Please make sure the type is right and that you are passing an instance.')
         if not isinstance(embedder, BaseEmbedder):
-            raise TypeError(
-                "Embedder is not a `BaseEmbedder` instance. "
-                "Please make sure the type is right and that you are passing an instance."
-            )
+            raise TypeError('Embedder is not a `BaseEmbedder` instance. Please make sure the type is right and that you are passing an instance.')
         super().__init__(config, llm=llm, db=db, embedder=embedder, system_prompt=system_prompt)
 
     @classmethod
@@ -124,22 +84,17 @@ class App(EmbedChain):
         :return: An instance of the App class.
         :rtype: App
         """
-        with open(yaml_path, "r") as file:
+        with open(yaml_path, 'r') as file:
             config_data = yaml.safe_load(file)
-
-        app_config_data = config_data.get("app", {})
-        llm_config_data = config_data.get("llm", {})
-        db_config_data = config_data.get("vectordb", {})
-        embedder_config_data = config_data.get("embedder", {})
-
-        app_config = AppConfig(**app_config_data.get("config", {}))
-
-        llm_provider = llm_config_data.get("provider", "openai")
-        llm = LlmFactory.create(llm_provider, llm_config_data.get("config", {}))
-
-        db_provider = db_config_data.get("provider", "chroma")
-        db = VectorDBFactory.create(db_provider, db_config_data.get("config", {}))
-
-        embedder_provider = embedder_config_data.get("provider", "openai")
-        embedder = EmbedderFactory.create(embedder_provider, embedder_config_data.get("config", {}))
+        app_config_data = config_data.get('app', {})
+        llm_config_data = config_data.get('llm', {})
+        db_config_data = config_data.get('vectordb', {})
+        embedder_config_data = config_data.get('embedder', {})
+        app_config = AppConfig(**app_config_data.get('config', {}))
+        llm_provider = llm_config_data.get('provider', 'openai')
+        llm = LlmFactory.create(llm_provider, llm_config_data.get('config', {}))
+        db_provider = db_config_data.get('provider', 'chroma')
+        db = VectorDBFactory.create(db_provider, db_config_data.get('config', {}))
+        embedder_provider = embedder_config_data.get('provider', 'openai')
+        embedder = EmbedderFactory.create(embedder_provider, embedder_config_data.get('config', {}))
         return cls(config=app_config, llm=llm, db=db, embedder=embedder)

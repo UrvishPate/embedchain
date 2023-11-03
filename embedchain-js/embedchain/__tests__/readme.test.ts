@@ -1,9 +1,12 @@
 import { EmbedChainApp } from '../embedchain';
-
 const mockAdd = jest.fn();
 const mockAddLocal = jest.fn();
 const mockQuery = jest.fn();
-
+/**
+ * Mocks the 'embedchain' module for testing purposes.
+ * 
+ * The mock implementation of the 'EmbedChainApp' class includes mock methods for 'add', 'addLocal', and 'query'.
+ */
 jest.mock('../embedchain', () => {
   return {
     EmbedChainApp: jest.fn().mockImplementation(() => {
@@ -15,7 +18,6 @@ jest.mock('../embedchain', () => {
     }),
   };
 });
-
 describe('Test App', () => {
   beforeEach(() => {
     jest.clearAllMocks();

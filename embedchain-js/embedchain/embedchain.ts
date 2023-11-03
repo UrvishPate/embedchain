@@ -6,7 +6,6 @@ import { Document } from 'langchain/document';
 import OpenAI from 'openai';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-
 import type { BaseChunker } from './chunkers';
 import { PdfFileChunker, QnaPairChunker, WebPageChunker } from './chunkers';
 import type { BaseLoader } from './loaders';
@@ -23,11 +22,12 @@ import type {
 } from './models';
 import { ChromaDB } from './vectordb';
 import type { BaseVectorDB } from './vectordb/BaseVectorDb';
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
+/**
+ * Represents an EmbedChain that handles the embedding of different data types.
+ */
 class EmbedChain {
   dbClient: any;
 
@@ -42,6 +42,12 @@ class EmbedChain {
 
   sId: string; // sessionId
 
+  /**
+   * Creates a new EmbedChain with the specified database and metrics collection flag.
+   *
+   * @param db  The database to use.
+   * @param collectMetrics  The flag indicating whether to collect metrics.
+   */
   constructor(db?: BaseVectorDB, collectMetrics: boolean = true) {
     if (!db) {
       this.initApp = this.setupChroma();
@@ -56,6 +62,11 @@ class EmbedChain {
     this.sendTelemetryEvent('init');
   }
 
+  /**
+   * Sets up the Chroma database.
+   *
+   * @returns A promise that resolves when the setup is complete.
+   */
   async setupChroma(): Promise<void> {
     const db = new ChromaDB();
     await db.initDb;
@@ -68,6 +79,12 @@ class EmbedChain {
     }
   }
 
+  /**
+   * Sets up another type of database.
+   *
+   * @param db  The database to set up.
+   * @returns A promise that resolves when the setup is complete.
+   */
   async setupOther(db: BaseVectorDB): Promise<void> {
     await db.initDb;
     // TODO: Figure out how we can initialize an unknown database.
@@ -76,6 +93,12 @@ class EmbedChain {
     this.userAsks = [];
   }
 
+  /**
+   * Gets the appropriate loader for the specified data type.
+   *
+   * @param dataType  The data type to get the loader for.
+   * @returns The loader for the specified data type.
+   */
   static getLoader(dataType: DataType) {
     const loaders: { [t in DataType]: BaseLoader } = {
       pdf_file: new PdfFileLoader(),
@@ -85,6 +108,12 @@ class EmbedChain {
     return loaders[dataType];
   }
 
+  /**
+   * Gets the appropriate chunker for the specified data type.
+   *
+   * @param dataType  The data type to get the chunker for.
+   * @returns The chunker for the specified data type.
+   */
   static getChunker(dataType: DataType) {
     const chunkers: { [t in DataType]: BaseChunker } = {
       pdf_file: new PdfFileChunker(),
@@ -94,6 +123,12 @@ class EmbedChain {
     return chunkers[dataType];
   }
 
+  /**
+   * Adds a remote input to the EmbedChain.
+   *
+   * @param dataType  The data type of the input.
+   * @param url  The URL of the remote input.
+   */
   public async add(dataType: DataType, url: RemoteInput) {
     const loader = EmbedChain.getLoader(dataType);
     const chunker = EmbedChain.getChunker(dataType);
@@ -118,6 +153,12 @@ class EmbedChain {
     }
   }
 
+  /**
+   * Adds a local input to the EmbedChain.
+   *
+   * @param dataType  The data type of the input.
+   * @param content  The content of the local input.
+   */
   public async addLocal(dataType: DataType, content: LocalInput) {
     const loader = EmbedChain.getLoader(dataType);
     const chunker = EmbedChain.getChunker(dataType);
@@ -142,6 +183,14 @@ class EmbedChain {
     }
   }
 
+  /**
+   * Loads and embeds an input.
+   *
+   * @param loader  The loader to use.
+   * @param chunker  The chunker to use.
+   * @param src  The source of the input.
+   * @returns A promise that resolves with the loaded and embedded documents, metadatas, ids, and the count of new chunks.
+   */
   protected async loadAndEmbed(
     loader: any,
     chunker: BaseChunker,
@@ -186,6 +235,12 @@ class EmbedChain {
     return { documents, metadatas, ids, countNewChunks };
   }
 
+  /**
+   * Formats the result of a query.
+   *
+   * @param results  The results of the query.
+   * @returns A promise that resolves with the formatted results.
+   */
   static async formatResult(
     results: QueryResponse
   ): Promise<FormattedResult[]> {
@@ -197,6 +252,12 @@ class EmbedChain {
     });
   }
 
+  /**
+   * Gets an answer from OpenAI.
+   *
+   * @param prompt  The prompt to use.
+   * @returns A promise that resolves with the answer from OpenAI.
+   */
   static async getOpenAiAnswer(prompt: string) {
     const messages: OpenAI.Chat.CreateChatCompletionRequestMessage[] = [
       { role: 'user', content: prompt },
@@ -213,6 +274,12 @@ class EmbedChain {
     );
   }
 
+  /**
+   * Retrieves content from the database.
+   *
+   * @param inputQuery  The query to use.
+   * @returns A promise that resolves with the retrieved content.
+   */
   protected async retrieveFromDatabase(inputQuery: string) {
     const result = await this.collection.query({
       nResults: 1,
@@ -223,16 +290,35 @@ class EmbedChain {
     return content;
   }
 
+  /**
+   * Generates a prompt using the specified input query and context.
+   *
+   * @param inputQuery  The input query to use.
+   * @param context  The context to use.
+   * @returns The generated prompt.
+   */
   static generatePrompt(inputQuery: string, context: any) {
     const prompt = `Use the following pieces of context to answer the query at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n${context}\nQuery: ${inputQuery}\nHelpful Answer:`;
     return prompt;
   }
 
+  /**
+   * Gets an answer from LLM.
+   *
+   * @param prompt  The prompt to use.
+   * @returns A promise that resolves with the answer from LLM.
+   */
   static async getAnswerFromLlm(prompt: string) {
     const answer = await EmbedChain.getOpenAiAnswer(prompt);
     return answer;
   }
 
+  /**
+   * Queries the EmbedChain.
+   *
+   * @param inputQuery  The query to use.
+   * @returns A promise that resolves with the answer to the query.
+   */
   public async query(inputQuery: string) {
     const context = await this.retrieveFromDatabase(inputQuery);
     const prompt = EmbedChain.generatePrompt(inputQuery, context);
@@ -241,6 +327,12 @@ class EmbedChain {
     return answer;
   }
 
+  /**
+   * Performs a dry run of a query.
+   *
+   * @param input_query  The query to use.
+   * @returns A promise that resolves with the prompt for the dry run.
+   */
   public async dryRun(input_query: string) {
     const context = await this.retrieveFromDatabase(input_query);
     const prompt = EmbedChain.generatePrompt(input_query, context);
@@ -248,13 +340,20 @@ class EmbedChain {
   }
 
   /**
-   * Count the number of embeddings.
-   * @returns {Promise<number>}: The number of embeddings.
+   * Counts the number of embeddings in the collection.
+   *
+   * @returns A promise that resolves with the number of embeddings.
    */
   public count(): Promise<number> {
     return this.collection.count();
   }
 
+  /**
+   * Sends a telemetry event.
+   *
+   * @param method  The method to use.
+   * @param extraMetadata  The extra metadata to include.
+   */
   protected async sendTelemetryEvent(method: Method, extraMetadata?: object) {
     if (!this.collectMetrics) {
       return;
@@ -306,12 +405,16 @@ class EmbedChain {
     }
   }
 }
-
+/**
+ * Represents an application that extends the EmbedChain class.
+ * This application has two main functions: add and query.
+ * The add function adds data from a given URL to the vector database.
+ * The query function finds an answer to a given query using the vector database and LLM.
+ */
 class EmbedChainApp extends EmbedChain {
   // The EmbedChain app.
   // Has two functions: add and query.
   // adds(dataType, url): adds the data from the given URL to the vector db.
   // query(query): finds answer to the given query using vector database and LLM.
 }
-
 export { EmbedChainApp };
