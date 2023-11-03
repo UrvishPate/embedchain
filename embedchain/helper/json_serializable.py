@@ -2,13 +2,7 @@ import json
 import logging
 from string import Template
 from typing import Any, Dict, Type, TypeVar, Union
-
-T = TypeVar("T", bound="JSONSerializable")
-
-# NOTE: Through inheritance, all of our classes should be children of JSONSerializable. (highest level)
-# NOTE: The @register_deserializable decorator should be added to all user facing child classes. (lowest level)
-
-
+T = TypeVar('T', bound='JSONSerializable')
 def register_deserializable(cls: Type[T]) -> Type[T]:
     """
     A class decorator to register a class as deserializable.
@@ -35,8 +29,6 @@ def register_deserializable(cls: Type[T]) -> Type[T]:
     """
     JSONSerializable.register_class_as_deserializable(cls)
     return cls
-
-
 class JSONSerializable:
     """
     A class to represent a JSON serializable object.
@@ -44,8 +36,7 @@ class JSONSerializable:
     This class provides methods to serialize and deserialize objects,
     as well as save serialized objects to a file and load them back.
     """
-
-    _deserializable_classes = set()  # Contains classes that are whitelisted for deserialization.
+    _deserializable_classes = set()
 
     def serialize(self) -> str:
         """
@@ -57,8 +48,8 @@ class JSONSerializable:
         try:
             return json.dumps(self, default=self._auto_encoder, ensure_ascii=False)
         except Exception as e:
-            logging.error(f"Serialization error: {e}")
-            return "{}"
+            logging.error(f'Serialization error: {e}')
+            return '{}'
 
     @classmethod
     def deserialize(cls, json_str: str) -> Any:
@@ -79,8 +70,7 @@ class JSONSerializable:
         try:
             return json.loads(json_str, object_hook=cls._auto_decoder)
         except Exception as e:
-            logging.error(f"Deserialization error: {e}")
-            # Return a default instance in case of failure
+            logging.error(f'Deserialization error: {e}')
             return cls()
 
     @staticmethod
@@ -94,36 +84,22 @@ class JSONSerializable:
         Returns:
             dict: A dictionary representation of the object.
         """
-        if hasattr(obj, "__dict__"):
+        if hasattr(obj, '__dict__'):
             dct = obj.__dict__.copy()
-            for key, value in list(
-                dct.items()
-            ):  # We use list() to get a copy of items to avoid dictionary size change during iteration.
+            for (key, value) in list(dct.items()):
                 try:
-                    # Recursive: If the value is an instance of a subclass of JSONSerializable,
-                    # serialize it using the JSONSerializable serialize method.
                     if isinstance(value, JSONSerializable):
                         serialized_value = value.serialize()
-                        # The value is stored as a serialized string.
                         dct[key] = json.loads(serialized_value)
-                    # Custom rules (subclass is not json serializable by default)
                     elif isinstance(value, Template):
-                        dct[key] = {"__type__": "Template", "data": value.template}
-                    # Future custom types we can follow a similar pattern
-                    # elif isinstance(value, SomeOtherType):
-                    #     dct[key] = {
-                    #         "__type__": "SomeOtherType",
-                    #         "data": value.some_method()
-                    #     }
-                    # NOTE: Keep in mind that this logic needs to be applied to the decoder too.
+                        dct[key] = {'__type__': 'Template', 'data': value.template}
                     else:
-                        json.dumps(value)  # Try to serialize the value.
+                        json.dumps(value)
                 except TypeError:
-                    del dct[key]  # If it fails, remove the key-value pair from the dictionary.
-
-            dct["__class__"] = obj.__class__.__name__
+                    del dct[key]
+            dct['__class__'] = obj.__class__.__name__
             return dct
-        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+        raise TypeError(f'Object of type {type(obj)} is not JSON serializable')
 
     @classmethod
     def _auto_decoder(cls, dct: Dict[str, Any]) -> Any:
@@ -136,22 +112,19 @@ class JSONSerializable:
         Returns:
             Object: The decoded object or the original dictionary if decoding is not possible.
         """
-        class_name = dct.pop("__class__", None)
+        class_name = dct.pop('__class__', None)
         if class_name:
-            if not hasattr(cls, "_deserializable_classes"):  # Additional safety check
-                raise AttributeError(f"`{class_name}` has no registry of allowed deserializations.")
+            if not hasattr(cls, '_deserializable_classes'):
+                raise AttributeError(f'`{class_name}` has no registry of allowed deserializations.')
             if class_name not in {cl.__name__ for cl in cls._deserializable_classes}:
-                raise KeyError(f"Deserialization of class `{class_name}` is not allowed.")
+                raise KeyError(f'Deserialization of class `{class_name}` is not allowed.')
             target_class = next((cl for cl in cls._deserializable_classes if cl.__name__ == class_name), None)
             if target_class:
                 obj = target_class.__new__(target_class)
-                for key, value in dct.items():
-                    if isinstance(value, dict) and "__type__" in value:
-                        if value["__type__"] == "Template":
-                            value = Template(value["data"])
-                        # For future custom types we can follow a similar pattern
-                        # elif value["__type__"] == "SomeOtherType":
-                        #     value = SomeOtherType.some_constructor(value["data"])
+                for (key, value) in dct.items():
+                    if isinstance(value, dict) and '__type__' in value:
+                        if value['__type__'] == 'Template':
+                            value = Template(value['data'])
                     default_value = getattr(target_class, key, None)
                     setattr(obj, key, value or default_value)
                 return obj
@@ -164,7 +137,7 @@ class JSONSerializable:
         Args:
             filename (str): The path to the file where the object should be saved.
         """
-        with open(filename, "w", encoding="utf-8") as f:
+        with open(filename, 'w', encoding='utf-8') as f:
             f.write(self.serialize())
 
     @classmethod
@@ -178,7 +151,7 @@ class JSONSerializable:
         Returns:
             Object: The deserialized object.
         """
-        with open(filename, "r", encoding="utf-8") as f:
+        with open(filename, 'r', encoding='utf-8') as f:
             json_str = f.read()
             return cls.deserialize(json_str)
 
