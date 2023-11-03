@@ -1,10 +1,19 @@
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
-
 import { cleanString } from '../utils';
 import { BaseLoader } from './BaseLoader';
-
+/**
+ * Class representing a WebPageLoader.
+ * @extends BaseLoader
+ */
 class WebPageLoader extends BaseLoader {
+  /**
+   * Load data from a specific URL and clean the HTML content by removing unwanted tags.
+   * 
+   * @param {string} url - The URL to load data from.
+   * @returns {Array} output - An array containing the cleaned content and metadata of the webpage.
+   * @throws Will throw an error if the web page content is empty.
+   */
   // eslint-disable-next-line class-methods-use-this
   async loadData(url: string) {
     const response = await axios.get(url);
@@ -47,5 +56,4 @@ class WebPageLoader extends BaseLoader {
     return output;
   }
 }
-
 export { WebPageLoader };
