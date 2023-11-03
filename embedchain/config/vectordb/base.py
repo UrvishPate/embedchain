@@ -1,17 +1,8 @@
 from typing import Optional
-
 from embedchain.config.base_config import BaseConfig
-
-
 class BaseVectorDbConfig(BaseConfig):
-    def __init__(
-        self,
-        collection_name: Optional[str] = None,
-        dir: str = "db",
-        host: Optional[str] = None,
-        port: Optional[str] = None,
-        **kwargs,
-    ):
+
+    def __init__(self, collection_name: Optional[str]=None, dir: str='db', host: Optional[str]=None, port: Optional[str]=None, **kwargs):
         """
         Initializes a configuration class instance for the vector database.
 
@@ -26,11 +17,10 @@ class BaseVectorDbConfig(BaseConfig):
         :param kwargs: Additional keyword arguments
         :type kwargs: dict
         """
-        self.collection_name = collection_name or "embedchain_store"
+        self.collection_name = collection_name or 'embedchain_store'
         self.dir = dir
         self.host = host
         self.port = port
-        # Assign additional keyword arguments
         if kwargs:
-            for key, value in kwargs.items():
+            for (key, value) in kwargs.items():
                 setattr(self, key, value)
