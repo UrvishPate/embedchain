@@ -1,16 +1,22 @@
 import type { TextContent } from 'pdfjs-dist/types/src/display/api';
-
 import type { LoaderResult, Metadata } from '../models';
 import { cleanString } from '../utils';
 import { BaseLoader } from './BaseLoader';
-
 const pdfjsLib = require('pdfjs-dist');
-
 interface Page {
   page_content: string;
 }
-
+/**
+ * Class representing a PDF File Loader.
+ * This class extends the BaseLoader class.
+ */
 class PdfFileLoader extends BaseLoader {
+  /**
+   * Asynchronously gets pages from a PDF file.
+   * 
+   * @param {string} url - The URL of the PDF file.
+   * @returns {Promise<Page[]>} - A promise that resolves with an array of pages.
+   */
   static async getPagesFromPdf(url: string): Promise<Page[]> {
     const loadingTask = pdfjsLib.getDocument(url);
     const pdf = await loadingTask.promise;
@@ -31,6 +37,13 @@ class PdfFileLoader extends BaseLoader {
     return Promise.all(promises);
   }
 
+  /**
+   * Asynchronously loads data from a URL.
+   * 
+   * @param {string} url - The URL to load data from.
+   * @returns {Promise<LoaderResult>} - A promise that resolves with the loaded data.
+   * @throws {Error} - Throws an error if no data is found.
+   */
   // eslint-disable-next-line class-methods-use-this
   async loadData(url: string): Promise<LoaderResult> {
     const pages: Page[] = await PdfFileLoader.getPagesFromPdf(url);
@@ -54,5 +67,4 @@ class PdfFileLoader extends BaseLoader {
     return output;
   }
 }
-
 export { PdfFileLoader };
